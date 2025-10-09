@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Double</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="particles-container" id="particles"></div>
+    
+    <div class="container">
+        <h1>Double</h1>
+        <div class="roulette-wrapper">
+            <div class="arrow-container arrow-top">
+                <div class="arrow" id="arrowTop"></div>
+            </div>
+            <div class="roulette-container">
+                <div class="glow-effect" id="glowEffect"></div>
+                <div class="roulette-items" id="rouletteItems"></div>
+                <div class="result-frame" id="resultFrame">
+                    <img src="ramka.png" alt="Result Frame">
+                </div>
+                <div class="analysis-overlay" id="analysisOverlay">ANALYZE...</div>
+            </div>
+            <div class="arrow-container arrow-bottom">
+                <div class="arrow" id="arrowBottom"></div>
+            </div>
+        </div>
+        <div class="result" id="result"></div>
+        <div class="button-container">
+            <button class="spin-button" onclick="spin()" id="spinButton">GET SIGNAL</button>
+        </div>
+    </div>
+
+    <div class="tab">
+        <button class="tablinks games-icon" data-tab="Games" onclick="window.location.href='https://azgoodwin.github.io/sgmin/';">
+            <img src="images/back.png" alt="Игры">
+        </button>
+    </div>    
+
+    <script src="roulette.js"></script>
+</body>
+</html>
