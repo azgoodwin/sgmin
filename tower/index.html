@@ -1,0 +1,346 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🎲 Tower Rush Предсказатель</title>
+<style>
+    :root{
+        --bg:#0b1220;
+        --panel:#101b2d;
+        --panel-2:#0f1a2b;
+        --text:#e6e9f0;
+        --muted:#9aa7bf;
+        --accent:#ffd24a;
+        --accent-strong:#ffbf00;
+        --shadow: rgba(0,0,0,.55);
+        --shadow-in: rgba(0,0,0,.45);
+        --pill:#2a3346;
+        --ok:#ffc533;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+        margin:0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        color:var(--text);
+        background:
+            radial-gradient(1200px 700px at 20% -10%, #14213b55, transparent 60%),
+            radial-gradient(900px 600px at 120% 0%, #12233f55, transparent 50%),
+            var(--bg);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:24px;
+    }
+
+    .container{
+        width: 420px;
+        background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+        border-radius: 26px;
+        padding: 26px 22px 28px;
+        position:relative;
+        box-shadow:
+            0 18px 40px var(--shadow),
+            inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+
+    /* language switch */
+    .language-switch{
+        position:absolute; top:14px; right:14px;
+        width:84px; height:32px; border-radius:16px;
+        background:#1a2436;
+        box-shadow: inset 0 0 12px var(--shadow-in);
+        display:flex; align-items:center; justify-content:space-between;
+        padding:0; cursor:pointer; font-weight:700; font-size:12px;
+        color:#dfe6f3; user-select:none;
+    }
+    .language-switch span{
+        flex:1; text-align:center; z-index:1;
+    }
+    .language-switch .slider{
+        position:absolute; top:2px; bottom:2px;
+        width:40px; border-radius:14px;
+        background:#384560;
+        transition:.25s ease;
+    }
+    .language-switch.en .slider{ left:auto; right:2px; }
+    .language-switch:not(.en) .slider{ left:2px; right:auto; }
+
+    /* header */
+    .top{
+        display:flex; align-items:center; gap:12px; margin-bottom:10px;
+    }
+    .app-icon{
+        width:36px; height:36px; border-radius:10px;
+        background: radial-gradient(circle at 30% 30%, #ffe07a, #ffc12e 55%, #f4a300);
+        box-shadow: 0 8px 16px rgba(255,193,46,.35), inset 0 0 0 1px rgba(255,255,255,.25);
+        flex: 0 0 auto;
+    }
+    h1{
+        margin:0; font-size:24px; letter-spacing:.6px; font-weight:900;
+        text-shadow: 0 2px 8px rgba(0,0,0,.45);
+    }
+
+    .status-pill{
+        margin-top:8px;
+        display:inline-flex; align-items:center; gap:8px;
+        background: var(--pill);
+        color:#cbd6ea; padding:6px 12px; border-radius:14px;
+        font-size:12px; font-weight:700;
+        box-shadow: inset 0 0 10px var(--shadow-in);
+    }
+    .status-dot{
+        width:8px; height:8px; border-radius:50%;
+        background:#5ce37a; box-shadow:0 0 0px rgba(92,227,122,.6);
+    }
+    .status-pill.pending .status-dot{ background:#ffc24b; box-shadow:0 0 0px rgba(255,194,75,.7) }
+
+    /* ID block */
+    .card{
+        margin-top:14px;
+        background: #0e182a;
+        border-radius:20px;
+        padding:16px;
+        box-shadow: inset 0 0 16px rgba(255,255,255,.03);
+    }
+    .label{
+        text-align:left;
+        font-weight:800; letter-spacing:.3px; margin:2px 0 10px; color:#eff2f9;
+    }
+    .id-row{
+        display:grid; grid-template-columns: 1fr 92px; gap:10px; align-items:center;
+    }
+    .input{
+        height:46px; padding:0 14px; border-radius:12px; border:1px solid #1f2a43;
+        background:#0b1426; color:#e7ecf7; font-size:15px; outline:none;
+        box-shadow: inset 0 0 10px rgba(0,0,0,.35);
+    }
+    .input:disabled{ opacity:.7 }
+    .ok-btn{
+        height:46px; border:none; border-radius:14px; font-weight:900; font-size:14px;
+        color:#2b2300; cursor:pointer;
+        background: linear-gradient(180deg, #ffd766 0%, #ffbf19 100%);
+        box-shadow: 0 8px 18px rgba(255,191,25,.35), inset 0 0 0 1px rgba(255,255,255,.35);
+        transition:.15s ease transform, .15s ease box-shadow;
+    }
+    .ok-btn:hover{ transform: translateY(-1px); box-shadow: 0 10px 22px rgba(255,191,25,.45) }
+    .ok-btn:disabled{ filter:saturate(.6); cursor:not-allowed; }
+
+    .hint{
+        margin-top:10px; color:var(--muted); font-size:12.5px; text-align:left; line-height:1.35;
+    }
+
+    /* result block */
+    .result{
+        margin-top:16px; padding:20px 16px 64px;
+        background:#0e1930; border-radius:20px;
+        position:relative; overflow:hidden;
+        box-shadow: inset 0 0 18px rgba(255,255,255,.04);
+        min-height:220px;
+        display:flex; align-items:center; justify-content:center;
+    }
+    .loader{
+        border:5px solid rgba(255,255,255,.15);
+        border-top:5px solid var(--accent);
+        border-radius:50%; width:44px; height:44px;
+        animation:spin 1s linear infinite; position:absolute; top:24px; right:24px; display:none;
+    }
+    @keyframes spin{ to{ transform: rotate(360deg)} }
+
+    .result-number{
+        position:absolute; top:50%; left:50%;
+        transform: translate(-50%,-60%) scale(.8);
+        font-size:112px; font-weight:900; letter-spacing:2px;
+        color: var(--accent);
+        opacity:0; transition:.45s ease;
+        pointer-events:none;
+    }
+    .result-number.show{ opacity:1; transform: translate(-50%,-60%) scale(1) }
+
+    .caption{
+        position:absolute; bottom:18px; width:100%; text-align:center;
+        font-size:15px; font-weight:700; color:#eaf1ff; text-shadow:0 1px 3px rgba(0,0,0,.5);
+    }
+
+    /* striped button */
+    .signal-btn{
+        margin-top:16px; width:100%; height:64px; border-radius:18px;
+        border:none; font-weight:900; font-size:18px; letter-spacing:.6px;
+        text-transform:uppercase; color:#0b0f18;
+        cursor:pointer;
+        background: linear-gradient(180deg, #ffd766 0%, #ffbf19 100%);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.2), 0 14px 30px rgba(0,0,0,.55);
+        position:relative; overflow:hidden;
+        transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .signal-btn:hover{ transform: translateY(-1px); box-shadow: 0 18px 34px rgba(0,0,0,.6) }
+    .signal-btn:disabled{ filter:saturate(.4); cursor:not-allowed; }
+
+
+    .sback-btn{
+        margin-top:16px; height:64px; border-radius:18px;
+        width: 150px;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+        border:none; font-weight:900; font-size:18px; letter-spacing:.6px;
+        text-transform:uppercase; color:#0b0f18;
+        cursor:pointer;
+        background: linear-gradient(180deg, #eaff66 0%, #ff6a19 100%);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.2), 0 14px 30px rgba(0,0,0,.55);
+        position:relative; overflow:hidden;
+        transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .sback-btn:hover{ transform: translateY(-1px); box-shadow: 0 18px 34px rgba(0,0,0,.6) }
+    .sback-btn:disabled{ filter:saturate(.4); cursor:not-allowed; }
+
+    .tip{
+        margin-top:14px;
+        font-size:14px;
+        color:#cfd9ee;
+        line-height:1.45;
+        opacity:0;
+        text-align:center;
+        transition:.35s ease;
+    }
+    .tip.show{ opacity:1; transform: translateY(0) }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="language-switch" id="languageSwitch">
+        <span>RU</span><span>EN</span>
+        <div class="slider"></div>
+    </div>
+
+    <div class="top">
+        <div class="app-icon" aria-hidden="true"></div>
+        <h1 id="title">TOWER RUSH</h1>
+    </div>
+
+    <div class="status-pill pending" id="statusPill">
+        <span class="status-dot"></span>
+        <span id="statusText">Введите ID</span>
+    </div>
+
+    <div class="card" id="idCard">
+        <div class="label" id="idLabel">ID игры</div>
+        <div class="id-row">
+            <input id="gameId" class="input" type="text" inputmode="numeric" maxlength="18" placeholder="Введите ID"/>
+            <button id="saveId" class="ok-btn">OK</button>
+        </div>
+        <div class="hint" id="idHint">Укажите ID игры. Его нужно ввести только 1 раз.</div>
+    </div>
+
+    <div class="result">
+        <div class="loader" id="loader"></div>
+        <div class="result-number" id="resultNumber">-</div>
+        <div class="caption" id="caption">Сколько блоков подряд поставить</div>
+    </div>
+
+    <button id="getSignal" class="signal-btn">ПОЛУЧИТЬ СИГНАЛ</button>
+    <button class="sback-btn" target="_blank2" onclick="location.href='https://azgoodwin.github.io/sgmin/'">⬅️Back</button>
+
+    <div class="tip" id="tipText">
+        Если вы сделали больше чем x2.5 от ставки, забирайте выигрыш! Даже если бот сказал ставить больше блоков.
+    </div>
+</div>
+
+<script>
+(function(){
+    let currentLang = 'RU';
+    let idEntered = false; // новый флаг, каждый заход требует ввод ID
+
+    const t = {
+        RU:{title:'TOWER RUSH', statusReady:'Готов к сигналу', statusNeedId:'Введите ID',
+            idLabel:'ID игры', idPlaceholder:'Введите ID', idHintEmpty:'Укажите ID игры. Его нужно ввести только 1 раз.',
+            caption:'Сколько блоков подряд поставить', btnSignal:'ПОЛУЧИТЬ СИГНАЛ',
+            loading:'Подождите, идёт анализ…',
+            tip:(m)=>`Если вы сделали больше чем x${m} от ставки, забирайте выигрыш! Даже если бот сказал ставить больше блоков.`},
+        EN:{title:'TOWER RUSH', statusReady:'Ready for signal', statusNeedId:'Enter ID',
+            idLabel:'Game ID', idPlaceholder:'Enter ID', idHintEmpty:'Enter your Game ID once. You won’t need to type it again.',
+            caption:'How many blocks in a row to place', btnSignal:'GET SIGNAL',
+            loading:'Please wait, analyzing…',
+            tip:(m)=>`If you made more than x${m} of your bet, take your winnings! Even if the bot suggested more blocks.`}
+    };
+
+    const els = {
+        languageSwitch: document.getElementById('languageSwitch'),
+        title: document.getElementById('title'),
+        statusPill: document.getElementById('statusPill'),
+        statusText: document.getElementById('statusText'),
+        gameId: document.getElementById('gameId'),
+        saveId: document.getElementById('saveId'),
+        idCard: document.getElementById('idCard'),
+        idLabel: document.getElementById('idLabel'),
+        idHint: document.getElementById('idHint'),
+        caption: document.getElementById('caption'),
+        getSignal: document.getElementById('getSignal'),
+        loader: document.getElementById('loader'),
+        resultNumber: document.getElementById('resultNumber'),
+        tipText: document.getElementById('tipText')
+    };
+
+    function getRandomInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+    function getRandomFloat(min,max,d=1){return (Math.random()*(max-min)+min).toFixed(d);}
+
+    els.languageSwitch.addEventListener('click', () => {
+        currentLang = currentLang==='RU'?'EN':'RU';
+        els.languageSwitch.classList.toggle('en');
+        applyTexts();
+    });
+
+    function applyTexts(){
+        const L = t[currentLang];
+        els.title.textContent = L.title;
+        els.idLabel.textContent = L.idLabel;
+        els.gameId.placeholder = L.idPlaceholder;
+        els.idHint.textContent = L.idHintEmpty;
+        els.caption.textContent = L.caption;
+        els.getSignal.textContent = L.btnSignal;
+        els.statusText.textContent = idEntered ? L.statusReady : L.statusNeedId;
+
+        if(els.tipText.dataset.dynamic!=='1'){els.tipText.textContent = L.tip('2.8');}
+    }
+
+    els.saveId.addEventListener('click', ()=>{
+        const val=(els.gameId.value||'').trim();
+        if(!val) return;
+        idEntered = true;
+        els.idCard.style.display='none';
+        els.statusPill.classList.remove('pending');
+        els.statusText.textContent=t[currentLang].statusReady;
+    });
+
+    els.getSignal.addEventListener('click', ()=>{
+        if(!idEntered){
+            alert(t[currentLang].statusNeedId);
+            return;
+        }
+        els.loader.style.display='block';
+        els.resultNumber.classList.remove('show');
+        els.tipText.classList.remove('show');
+        els.tipText.textContent=t[currentLang].loading;
+        els.tipText.dataset.dynamic='0';
+        els.getSignal.disabled=true;
+
+        setTimeout(()=>{
+            els.loader.style.display='none';
+            const number=getRandomInt(2,7);
+            const mult=getRandomFloat(1.6,2.8);
+            els.resultNumber.textContent=number;
+            els.resultNumber.classList.add('show');
+            els.tipText.textContent=t[currentLang].tip(mult);
+            els.tipText.classList.add('show');
+            els.tipText.dataset.dynamic='1';
+            els.getSignal.disabled=false;
+        },1200);
+    });
+
+    applyTexts();
+})();
+</script>
+</body>
+</html>
