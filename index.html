@@ -121,7 +121,8 @@
             <a href="king/index.html" class="play-button"></a>
         </div>
     </div>
-
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="script.js"></script>
     <div class="settings-popup animated-settings" id="settings-popup">
         <div class="settings-box">
@@ -158,24 +159,4 @@
 
 
 </body>
-    <script>
-      function expandWhenReady() {
-        if (window.Telegram && window.Telegram.WebApp) {
-          const tg = window.Telegram.WebApp;
-          tg.ready(); // уведомляем Telegram, что страница загружена
-          try {
-            tg.expand(); // пытаемся развернуть на весь экран
-            console.log("✅ Telegram WebApp expanded");
-          } catch (e) {
-            console.warn("expand() error:", e);
-          }
-        } else {
-          console.log("Telegram.WebApp not ready yet, retrying...");
-          setTimeout(expandWhenReady, 400); // ждём и повторяем
-        }
-      }
-
-      window.addEventListener("load", expandWhenReady);
-    </script>
-
 </html>
